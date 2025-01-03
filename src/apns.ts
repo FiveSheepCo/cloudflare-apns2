@@ -55,14 +55,14 @@ export class ApnsClient extends EventEmitter {
     this._supressH2Warning()
   }
 
-  sendMany(notifications: Notification[]) {
+  sendMany(notifications: Notification[]): Promise<(Notification | { error: ApnsError; })[]> {
     const promises = notifications.map((notification) =>
       this.send(notification).catch((error: ApnsError) => ({ error })),
     )
     return Promise.all(promises)
   }
 
-  async send(notification: Notification) {
+  async send(notification: Notification): Promise<Notification> {
     const headers = new Headers()
     headers.set("authorization", `bearer ${await this._getSigningToken()}`)
     headers.set("apns-push-type", notification.pushType)
@@ -100,7 +100,7 @@ export class ApnsClient extends EventEmitter {
     return this._handleServerResponse(res, notification)
   }
 
-  private async _handleServerResponse(res: Response, notification: Notification) {
+  private async _handleServerResponse(res: Response, notification: Notification): Promise<Notification> {
     if (res.status === 200) {
       return notification
     }

@@ -56,11 +56,11 @@ export class ApnsError extends Error {
     this.response = props.response
   }
 
-  get reason() {
+  get reason(): string {
     return this.response.reason
   }
 
-  get timestamp() {
+  get timestamp(): number {
     return this.response.timestamp
   }
 }

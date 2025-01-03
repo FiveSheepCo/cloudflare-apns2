@@ -48,7 +48,7 @@ export class Notification {
     return this.options.priority ?? Priority.immediate
   }
 
-  buildApnsOptions() {
+  buildApnsOptions(): ApnsPayload {
     const result: ApnsPayload = {
       aps: this.options.aps ?? {},
     }
