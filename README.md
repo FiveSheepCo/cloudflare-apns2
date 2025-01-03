@@ -1,6 +1,7 @@
 # APNS2 for Cloudflare Workers
 
-[![npm version](https://badgers.space/npm/version/fivesheepco/cloudflare-apns2)](https://www.npmjs.com/package/@fivesheepco/cloudflare-apns2)
+[![npm version](https://badgers.space/npm/version/@fivesheepco/cloudflare-apns2)](https://npmjs.com/package/@fivesheepco/cloudflare-apns2)
+[![jsr version](https://jsr.io/badges/@fivesheepco/cloudflare-apns2)](https://jsr.io/@fivesheepco/cloudflare-apns2)
 
 Client for connecting to Apple's Push Notification Service using the new HTTP/2 protocol with JSON web tokens.
 
