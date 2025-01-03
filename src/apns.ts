@@ -1,7 +1,8 @@
 import { EventEmitter } from "node:events"
-import { type PrivateKey, createSigner } from "fast-jwt"
+import { sign } from '@tsndr/cloudflare-worker-jwt'
 import { ApnsError, type ApnsResponseError, Errors } from "./errors.js"
 import { type Notification, Priority } from "./notifications/notification.js"
+import type { JsonWebKey } from "node:crypto"
 
 // APNS version
 const API_VERSION = 3
@@ -24,7 +25,7 @@ export interface SigningToken {
 
 export interface ApnsOptions {
   team: string
-  signingKey: string | Buffer | PrivateKey
+  signingKey: string | JsonWebKey
   keyId: string
   defaultTopic?: string
   host?: Host | string
@@ -36,7 +37,7 @@ export class ApnsClient extends EventEmitter {
   readonly team: string
   readonly keyId: string
   readonly host: Host | string
-  readonly signingKey: string | Buffer | PrivateKey
+  readonly signingKey: string | JsonWebKey
   readonly defaultTopic?: string
   readonly keepAlive: boolean
 
@@ -63,7 +64,7 @@ export class ApnsClient extends EventEmitter {
 
   async send(notification: Notification) {
     const headers = new Headers()
-    headers.set('authorization', `bearer ${this._getSigningToken()}`)
+    headers.set('authorization', `bearer ${await this._getSigningToken()}`)
     headers.set('apns-push-type', notification.pushType)
 
     const apnsTopic = notification.options.topic ?? this.defaultTopic
@@ -126,7 +127,7 @@ export class ApnsClient extends EventEmitter {
     throw error
   }
 
-  private _getSigningToken(): string {
+  private async _getSigningToken(): Promise<string> {
     if (this._token && Date.now() - this._token.timestamp < RESET_TOKEN_INTERVAL_MS) {
       return this._token.value
     }
@@ -136,13 +137,12 @@ export class ApnsClient extends EventEmitter {
       iat: Math.floor(Date.now() / 1000),
     }
 
-    const signer = createSigner({
-      key: this.signingKey,
+    const token = await sign(claims, this.signingKey, {
       algorithm: SIGNING_ALGORITHM,
-      kid: this.keyId,
+      header: {
+        kid: this.keyId,
+      }
     })
-
-    const token = signer(claims)
 
     this._token = {
       value: token,
