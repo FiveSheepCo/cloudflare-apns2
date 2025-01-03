@@ -1,6 +1,5 @@
 import { EventEmitter } from "node:events"
 import { type PrivateKey, createSigner } from "fast-jwt"
-import { type Dispatcher, Pool } from "undici"
 import { ApnsError, type ApnsResponseError, Errors } from "./errors.js"
 import { type Notification, Priority } from "./notifications/notification.js"
 
@@ -40,7 +39,6 @@ export class ApnsClient extends EventEmitter {
   readonly signingKey: string | Buffer | PrivateKey
   readonly defaultTopic?: string
   readonly keepAlive: boolean
-  readonly client: Pool
 
   private _token: SigningToken | null
 
@@ -52,12 +50,6 @@ export class ApnsClient extends EventEmitter {
     this.defaultTopic = options.defaultTopic
     this.host = options.host ?? Host.production
     this.keepAlive = options.keepAlive ?? true
-    this.client = new Pool(`https://${this.host}:443`, {
-      connections: this.keepAlive ? 32 : 1,
-      pipelining: this.keepAlive ? 1 : 0,
-      allowH2: true,
-      maxConcurrentStreams: 100,
-    })
     this._token = null
     this._supressH2Warning()
   }
@@ -70,52 +62,54 @@ export class ApnsClient extends EventEmitter {
   }
 
   async send(notification: Notification) {
-    const headers: Record<string, string | undefined> = {
-      authorization: `bearer ${this._getSigningToken()}`,
-      "apns-push-type": notification.pushType,
-      "apns-topic": notification.options.topic ?? this.defaultTopic,
+    const headers = new Headers()
+    headers.set('authorization', `bearer ${this._getSigningToken()}`)
+    headers.set('apns-push-type', notification.pushType)
+
+    const apnsTopic = notification.options.topic ?? this.defaultTopic
+    if (apnsTopic) {
+      headers.set('apns-topic', apnsTopic)
     }
 
     if (notification.priority !== Priority.immediate) {
-      headers["apns-priority"] = notification.priority.toString()
+      headers.set('apns-priority', notification.priority.toString())
     }
 
     const expiration = notification.options.expiration
     if (typeof expiration !== "undefined") {
-      headers["apns-expiration"] =
-        typeof expiration === "number"
-          ? expiration.toFixed(0)
-          : (expiration.getTime() / 1000).toFixed(0)
+      const expirationValue = typeof expiration === "number"
+        ? expiration.toFixed(0)
+        : (expiration.getTime() / 1000).toFixed(0)
+      headers.set('apns-expiration', expirationValue)
     }
 
     if (notification.options.collapseId) {
-      headers["apns-collapse-id"] = notification.options.collapseId
+      headers.set('apns-collapse-id', notification.options.collapseId)
     }
 
-    const res = await this.client.request({
-      path: `/${API_VERSION}/device/${encodeURIComponent(notification.deviceToken)}`,
+    const url = `https://${this.host}:443/${API_VERSION}/device/${encodeURIComponent(notification.deviceToken)}`
+    const res = await fetch(url, {
       method: "POST",
       headers: headers,
       body: JSON.stringify(notification.buildApnsOptions()),
-      idempotent: true,
-      blocking: false,
+      keepalive: this.keepAlive,
     })
 
     return this._handleServerResponse(res, notification)
   }
 
-  private async _handleServerResponse(res: Dispatcher.ResponseData, notification: Notification) {
-    if (res.statusCode === 200) {
+  private async _handleServerResponse(res: Response, notification: Notification) {
+    if (res.status === 200) {
       return notification
     }
 
-    const responseError = await res.body.json().catch(() => ({
+    const responseError = await res.json().catch(() => ({
       reason: Errors.unknownError,
       timestamp: Date.now(),
     }))
 
     const error = new ApnsError({
-      statusCode: res.statusCode,
+      statusCode: res.status,
       notification: notification,
       response: responseError as ApnsResponseError,
     })
