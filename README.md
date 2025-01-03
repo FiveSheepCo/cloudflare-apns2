@@ -1,9 +1,12 @@
-# apns2
+# APNS2 for Cloudflare Workers
 
-[![npm version](https://badge.fury.io/js/apns2.svg)](https://badge.fury.io/js/apns2)
-[![Twitter](https://img.shields.io/badge/twitter-@andrew_barba-blue.svg?style=flat)](http://twitter.com/andrew_barba)
+[![npm version](https://badgers.space/npm/fivesheepco/cloudflare-apns2)](https://www.npmjs.com/package/@fivesheepco/cloudflare-apns2)
 
-Node client for connecting to Apple's Push Notification Service using the new HTTP/2 protocol with JSON web tokens.
+Client for connecting to Apple's Push Notification Service using the new HTTP/2 protocol with JSON web tokens.
+
+## Fork Notice
+
+This is a fork of the original [apns2](https://github.com/AndrewBarba/apns2) package with support for Cloudflare Workers. The original package has multiple dependencies that are incompatible with the Cloudflare Workers runtime. This fork removes those dependencies and replaces them with native Cloudflare Workers APIs.
 
 ---
 

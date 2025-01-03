@@ -1,5 +1,5 @@
 import { EventEmitter } from "node:events"
-import { sign } from '@tsndr/cloudflare-worker-jwt'
+import { sign } from "@tsndr/cloudflare-worker-jwt"
 import { ApnsError, type ApnsResponseError, Errors } from "./errors.js"
 import { type Notification, Priority } from "./notifications/notification.js"
 import type { JsonWebKey } from "node:crypto"
@@ -64,28 +64,29 @@ export class ApnsClient extends EventEmitter {
 
   async send(notification: Notification) {
     const headers = new Headers()
-    headers.set('authorization', `bearer ${await this._getSigningToken()}`)
-    headers.set('apns-push-type', notification.pushType)
+    headers.set("authorization", `bearer ${await this._getSigningToken()}`)
+    headers.set("apns-push-type", notification.pushType)
 
     const apnsTopic = notification.options.topic ?? this.defaultTopic
     if (apnsTopic) {
-      headers.set('apns-topic', apnsTopic)
+      headers.set("apns-topic", apnsTopic)
     }
 
     if (notification.priority !== Priority.immediate) {
-      headers.set('apns-priority', notification.priority.toString())
+      headers.set("apns-priority", notification.priority.toString())
     }
 
     const expiration = notification.options.expiration
     if (typeof expiration !== "undefined") {
-      const expirationValue = typeof expiration === "number"
-        ? expiration.toFixed(0)
-        : (expiration.getTime() / 1000).toFixed(0)
-      headers.set('apns-expiration', expirationValue)
+      const expirationValue =
+        typeof expiration === "number"
+          ? expiration.toFixed(0)
+          : (expiration.getTime() / 1000).toFixed(0)
+      headers.set("apns-expiration", expirationValue)
     }
 
     if (notification.options.collapseId) {
-      headers.set('apns-collapse-id', notification.options.collapseId)
+      headers.set("apns-collapse-id", notification.options.collapseId)
     }
 
     const url = `https://${this.host}:443/${API_VERSION}/device/${encodeURIComponent(notification.deviceToken)}`
@@ -141,7 +142,7 @@ export class ApnsClient extends EventEmitter {
       algorithm: SIGNING_ALGORITHM,
       header: {
         kid: this.keyId,
-      }
+      },
     })
 
     this._token = {

@@ -1,8 +1,11 @@
 {
-  "name": "apns2",
+  "name": "@fivesheepco/cloudflare-apns2",
   "version": "12.1.0-beta.2",
-  "description": "Node client for connecting to Apple's Push Notification Service using the new HTTP/2 protocol with JSON web tokens.",
-  "author": "Andrew Barba <barba@hey.com>",
+  "description": "Client for connecting to Apple's Push Notification Service using the new HTTP/2 protocol with JSON web tokens.",
+  "author": "FiveSheep OÜ <help@fivesheep.co>",
+  "contributors": [
+    "Andrew Barba <barba@hey.com>"
+  ],
   "license": "MIT",
   "type": "module",
   "main": "./dist/cjs/index.js",
@@ -19,7 +22,7 @@
     "node": ">=20"
   },
   "repository": {
-    "url": "https://github.com/AndrewBarba/apns2"
+    "url": "git+https://github.com/FiveSheepCo/cloudflare-apns2.git"
   },
   "files": [
     "dist",
@@ -34,6 +37,7 @@
     "notification",
     "http2",
     "jwt",
+    "workers",
     "apple",
     "ios",
     "macos",
